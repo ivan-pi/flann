@@ -212,24 +212,24 @@ module flann
                         bind(c,name="flann_add_points")
         import c_int,c_ptr,c_float
         type(c_ptr), value :: index_id
-        real(c_float), intent(in) :: points
         integer(c_int), intent(in), value :: rows, cols
+        real(c_float), intent(in) :: points(cols,rows)
         real(c_float), intent(in), value :: rebuild_threshold
     end function
     integer(c_int) function flann_add_points_float(index_id,points,rows,cols,rebuild_threshold) &
                         bind(c,name="flann_add_points_float")
         import c_int,c_ptr,c_float
         type(c_ptr), value :: index_id
-        real(c_float), intent(in) :: points
         integer(c_int), intent(in), value :: rows, cols
+        real(c_float), intent(in) :: points(cols,rows)
         real(c_float), intent(in), value :: rebuild_threshold
     end function
     integer(c_int) function flann_add_points_double(index_id,points,rows,cols,rebuild_threshold) &
                         bind(c,name="flann_add_points_double")
         import c_int,c_ptr,c_float, c_double
         type(c_ptr), value :: index_id
-        real(c_double), intent(in) :: points
         integer(c_int), intent(in), value :: rows, cols
+        real(c_double), intent(in) :: points(cols,rows)
         real(c_float), intent(in), value :: rebuild_threshold
     end function
     integer(c_int) function flann_add_points_int(index_id,points,rows,cols,rebuild_threshold) &
@@ -276,22 +276,22 @@ module flann
     ! 
     ! Returns: pointer to datapoint or NULL on miss
     ! 
-    real(c_float) function flann_get_point(index_ptr,point_id) bind(C,name="flann_get_point")
+    type(c_ptr) function flann_get_point(index_ptr,point_id) bind(C,name="flann_get_point")
         import c_ptr, c_int, c_float
         type(c_ptr), intent(in), value :: index_ptr
         integer(c_int), intent(in), value :: point_id
     end function
-    real(c_float) function flann_get_point_float(index_ptr,point_id) bind(C,name="flann_get_point_float")
+    type(c_ptr) function flann_get_point_float(index_ptr,point_id) bind(C,name="flann_get_point_float")
         import c_ptr, c_int, c_float
         type(c_ptr), intent(in), value :: index_ptr
         integer(c_int), intent(in), value :: point_id
     end function
-    real(c_double) function flann_get_point_double(index_ptr,point_id) bind(C,name="flann_get_point_double")
+    type(c_ptr) function flann_get_point_double(index_ptr,point_id) bind(C,name="flann_get_point_double")
         import c_ptr, c_int, c_double
         type(c_ptr), intent(in), value :: index_ptr
         integer(c_int), intent(in), value :: point_id
     end function
-    integer(c_int) function flann_get_point_int(index_ptr,point_id) bind(C,name="flann_get_point_int")
+    type(c_ptr) function flann_get_point_int(index_ptr,point_id) bind(C,name="flann_get_point_int")
         import c_ptr, c_int
         type(c_ptr), intent(in), value :: index_ptr
         integer(c_int), intent(in), value :: point_id
@@ -372,10 +372,12 @@ module flann
     end function
 
     ! 
-    ! Returns the number of bytes consumed by the index.
+    ! Saves the index to a file. Only the index is saved into the file, the dataset corresponding to the index is not saved.
     ! 
-    ! index_ptr = pointer to pre-built index. 
-    ! 
+    ! @param index_id The index that should be saved
+    ! @param filename The filename the index should be saved to
+    ! @return Returns 0 on success, negative value on error.
+    !  
     integer(c_int) function flann_save_index(index_id,filename) bind(C,name="flann_save_index")
         import c_int,c_ptr,c_char
         type(c_ptr), intent(in), value :: index_id
