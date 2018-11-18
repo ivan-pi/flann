@@ -236,8 +236,8 @@ module flann
                         bind(c,name="flann_add_points_int")
         import c_int,c_ptr,c_float
         type(c_ptr), value :: index_id
-        real(c_float), intent(in) :: points
         integer(c_int), intent(in), value :: rows, cols
+        real(c_float), intent(in) :: points(cols,rows)
         real(c_float), intent(in), value :: rebuild_threshold
     end function
 
@@ -490,11 +490,11 @@ module flann
         import c_int, c_float, FLANNParameters
         integer(c_int), intent(in), value :: rows, cols
         integer(c_int), intent(in) :: dataset(cols,rows)
-        integer(c_int), intent(in) :: testset(*)
         integer(c_int), intent(in), value :: trows
+        integer(c_int), intent(in) :: testset(cols,trows)
         integer(c_int), intent(in), value :: nn
-        integer(c_int), intent(out) :: indices(*)
-        real(c_float), intent(out) :: dists(*)
+        integer(c_int), intent(out) :: indices(nn,trows)
+        real(c_float), intent(out) :: dists(nn,trows)
         type(FLANNParameters), intent(in) :: flann_params
     end function
 
@@ -518,7 +518,7 @@ module flann
                     bind(c,name="flann_find_nearest_neighbors_index")
         import c_int, c_ptr, c_float, FLANNParameters
         type(c_ptr), value :: index_id
-        integer(c_int), value :: trows
+        integer(c_int), intent(in), value :: trows
         real(c_float), intent(in) :: testset(*)
         integer(c_int), intent(in), value :: nn
         integer(c_int) :: indices(nn,trows)
@@ -588,7 +588,7 @@ module flann
                     bind(C,name="flann_radius_search")
         import c_int, c_ptr, c_float, FLANNParameters
         type(c_ptr), value :: index_ptr
-        real(c_float), intent(in) :: query
+        real(c_float), intent(in) :: query(*)
         integer(c_int), intent(in), value :: max_nn
         integer(c_int), intent(out) :: indices(max_nn)
         real(c_float), intent(out) :: dists(max_nn)
@@ -599,7 +599,7 @@ module flann
                     bind(C,name="flann_radius_search_float")
         import c_int, c_ptr, c_float, FLANNParameters
         type(c_ptr), value :: index_ptr
-        real(c_float), intent(in) :: query
+        real(c_float), intent(in) :: query(*)
         integer(c_int), intent(in), value :: max_nn
         integer(c_int), intent(out) :: indices(max_nn)
         real(c_float), intent(out) :: dists(max_nn)
@@ -610,7 +610,7 @@ module flann
                     bind(C,name="flann_radius_search_double")
         import c_int, c_ptr, c_float, c_double, FLANNParameters
         type(c_ptr), value :: index_ptr
-        real(c_double), intent(in) :: query
+        real(c_double), intent(in) :: query(*)
         integer(c_int), intent(in), value :: max_nn
         integer(c_int), intent(out) :: indices(max_nn)
         real(c_double), intent(out) :: dists(max_nn)
@@ -621,7 +621,7 @@ module flann
                     bind(C,name="flann_radius_search_int")
         import c_int, c_ptr, c_float, FLANNParameters
         type(c_ptr), value :: index_ptr
-        integer(c_int), intent(in) :: query
+        integer(c_int), intent(in) :: query(*)
         integer(c_int), intent(in), value :: max_nn
         integer(c_int), intent(out) :: indices(max_nn)
         integer(c_int), intent(out) :: dists(max_nn)
@@ -664,8 +664,6 @@ module flann
         type(FLANNParameters) :: flann_params
     end function
 
-    end interface
-
     ! 
     ! Clusters the features in the dataset using a hierarchical kmeans clustering approach.
     ! This is significantly faster than using a flat kmeans clustering for a large number
@@ -684,34 +682,43 @@ module flann
     !  way hierarchical clusters are computed. The number of clusters returned will be the highest number of the form
     !  (branch_size-1)*K+1 smaller than the number of clusters requested.
     ! 
-    interface flann_compute_cluster_centers
-        integer(c_int) function flann_compute_cluster_centers_float(dataset,rows,cols,clusters,result,flann_params) &
-                        bind(C,name="flann_compute_cluster_centers_float")
-            import c_int, c_float, FLANNParameters
-            integer(c_int), intent(in), value :: rows,cols
-            real(c_float), intent(in) :: dataset(cols,rows)
-            integer(c_int), intent(in), value :: clusters
-            real(c_float), intent(out) :: result(*)
-            type(FLANNParameters), intent(in) :: flann_params
-        end function
-        integer(c_int) function flann_compute_cluster_centers_double(dataset,rows,cols,clusters,result,flann_params) &
-                        bind(C,name="flann_compute_cluster_centers_double")
-            import c_int, c_double, FLANNParameters
-            integer(c_int), intent(in), value :: rows,cols
-            real(c_double), intent(in) :: dataset(cols,rows)
-            integer(c_int), intent(in), value :: clusters
-            real(c_double), intent(out) :: result(*)
-            type(FLANNParameters), intent(in) :: flann_params
-        end function
-        integer(c_int) function flann_compute_cluster_centers_int(dataset,rows,cols,clusters,result,flann_params) &
-                        bind(C,name="flann_compute_cluster_centers_int")
-            import c_int, c_float, FLANNParameters
-            integer(c_int), intent(in), value :: rows,cols
-            integer(c_int), intent(in) :: dataset(cols,rows)
-            integer(c_int), intent(in), value :: clusters
-            real(c_float), intent(out) :: result(*)
-            type(FLANNParameters), intent(in) :: flann_params
-        end function
+    integer(c_int) function flann_compute_cluster_centers(dataset,rows,cols,clusters,result,flann_params) &
+                    bind(C,name="flann_compute_cluster_centers")
+        import c_int, c_float, FLANNParameters
+        integer(c_int), intent(in), value :: rows,cols
+        real(c_float), intent(in) :: dataset(cols,rows)
+        integer(c_int), intent(in), value :: clusters
+        real(c_float), intent(out) :: result(clusters,cols)
+        type(FLANNParameters), intent(in) :: flann_params
+    end function
+    integer(c_int) function flann_compute_cluster_centers_float(dataset,rows,cols,clusters,result,flann_params) &
+                    bind(C,name="flann_compute_cluster_centers_float")
+        import c_int, c_float, FLANNParameters
+        integer(c_int), intent(in), value :: rows,cols
+        real(c_float), intent(in) :: dataset(cols,rows)
+        integer(c_int), intent(in), value :: clusters
+        real(c_float), intent(out) :: result(clusters,cols)
+        type(FLANNParameters), intent(in) :: flann_params
+    end function
+    integer(c_int) function flann_compute_cluster_centers_double(dataset,rows,cols,clusters,result,flann_params) &
+                    bind(C,name="flann_compute_cluster_centers_double")
+        import c_int, c_double, FLANNParameters
+        integer(c_int), intent(in), value :: rows,cols
+        real(c_double), intent(in) :: dataset(cols,rows)
+        integer(c_int), intent(in), value :: clusters
+        real(c_double), intent(out) :: result(clusters,cols)
+        type(FLANNParameters), intent(in) :: flann_params
+    end function
+    integer(c_int) function flann_compute_cluster_centers_int(dataset,rows,cols,clusters,result,flann_params) &
+                    bind(C,name="flann_compute_cluster_centers_int")
+        import c_int, c_float, FLANNParameters
+        integer(c_int), intent(in), value :: rows,cols
+        integer(c_int), intent(in) :: dataset(cols,rows)
+        integer(c_int), intent(in), value :: clusters
+        real(c_float), intent(out) :: result(clusters,cols)
+        type(FLANNParameters), intent(in) :: flann_params
+    end function
+
     end interface
 
 contains
