@@ -62,6 +62,9 @@ void write_results(const char* filename, int *data, int rows, int cols)
 }
 
 
+int get_int(void* value){
+    return *((int*) value);
+}
 
 int main(int argc, char** argv)
 {
@@ -93,17 +96,19 @@ int main(int argc, char** argv)
     dists = (float*) malloc(tcount*nn*sizeof(float));
     
     p = DEFAULT_FLANN_PARAMETERS;
+
     p.algorithm = FLANN_INDEX_KDTREE;
     p.trees = 8;
     p.log_level = FLANN_LOG_INFO;
-	p.checks = 64;
+	p.checks = 128;
     
     printf("Computing index.\n");
     index_id = flann_build_index(dataset, rows, cols, &speedup, &p);
+
     flann_find_nearest_neighbors_index(index_id, testset, tcount, result, dists, nn, &p);
     
     write_results("results.dat",result, tcount, nn);
-    
+
     flann_free_index(index_id, &p);
     free(dataset);
     free(testset);

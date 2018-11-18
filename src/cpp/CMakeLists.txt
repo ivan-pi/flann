@@ -7,6 +7,7 @@ configure_file(${CMAKE_CURRENT_SOURCE_DIR}/flann/config.h.in ${CMAKE_CURRENT_SOU
 file(GLOB_RECURSE C_SOURCES flann.cpp)
 file(GLOB_RECURSE CPP_SOURCES flann_cpp.cpp)
 file(GLOB_RECURSE CU_SOURCES *.cu)
+file(GLOB_RECURSE F_SOURCES *.f90)
 
 add_library(flann_cpp_s STATIC ${CPP_SOURCES})
 target_link_libraries(flann_cpp_s ${LZ4_LIBRARIES})
@@ -107,6 +108,29 @@ if (BUILD_C_BINDINGS)
     )
 endif()
 
+if (BUILD_FORTRAN_BINDINGS AND BUILD_C_BINDINGS)
+    add_library(flann_f_s STATIC ${F_SOURCES})
+    if(CMAKE_COMPILER_IS_GNUCC)
+        set_target_properties(flann_s PROPERTIES COMPILE_FLAGS -fPIC)
+    endif()
+    set_property(TARGET flann_f_s PROPERTY COMPILE_DEFINITIONS FLANN_STATIC)
+    set_target_properties(flann_f_s PROPERTIES LINKER_LANGUAGE CXX)
+
+    if(CMAKE_SYSTEM_NAME STREQUAL "Linux" AND CMAKE_COMPILER_IS_FC)
+        add_library(flann_f SHARED "")
+        set_target_properties(flann_f PROPERTIES LINKER_LANGUAGE CXX)
+        target_link_libraries(flann_f -Wl,-whole-archive flann_f_s -Wl,-no-whole-archive)
+    else()
+        add_library(flann_f SHARED ${F_SOURCES})
+    endif()
+
+    set_target_properties(flann_f PROPERTIES
+       VERSION ${FLANN_VERSION}
+       SOVERSION ${FLANN_SOVERSION}
+       DEFINE_SYMBOL FLANN_EXPORTS
+    )
+endif()
+
 if(WIN32)
 if (BUILD_C_BINDINGS AND BUILD_MATLAB_BINDINGS)
     install (
@@ -147,6 +171,17 @@ if (BUILD_C_BINDINGS)
         ARCHIVE DESTINATION ${FLANN_LIB_INSTALL_DIR}
     )
 endif()
+
+if (BUILD_FORTRAN_BINDINGS AND BUILD_C_BINDINGS)
+    install (
+        TARGETS flann_f flann_f_s
+        EXPORT ${targets_export_name}
+        INCLUDES DESTINATION include
+        RUNTIME DESTINATION bin
+        LIBRARY DESTINATION ${FLANN_LIB_INSTALL_DIR}
+        ARCHIVE DESTINATION ${FLANN_LIB_INSTALL_DIR}
+    )
+endif()    
 
 install (
     DIRECTORY flann

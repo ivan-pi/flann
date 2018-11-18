@@ -11,6 +11,16 @@ if (BUILD_C_BINDINGS)
     install (TARGETS flann_example_c DESTINATION bin )
 endif()
 
+if (BUILD_FORTRAN_BINDINGS)
+    add_executable(flann_example_f flann_example.f90)
+    target_link_libraries(flann_example_f flann_f flann) # link to both Fortran and C
+    #target_include_directories(flann_example_f PRIVATE ${})
+    set_target_properties(flann_example_f PROPERTIES COMPILE_FLAGS -Wall LINKER_LANGUAGE Fortran)
+
+    add_dependencies(examples flann_example_f)
+    install (TARGETS flann_example_f DESTINATION bin)
+endif()
+
 if (HDF5_FOUND)
     include_directories(${HDF5_INCLUDE_DIR})
 
@@ -37,6 +47,7 @@ else()
     message("hdf5 library not found, not compiling flann_example.cpp")
 endif()
 
-
+file(GLOB DATA *.dat *.hdf5)
+file(COPY ${DATA} DESTINATION ${EXECUTABLE_OUTPUT_PATH})
 
 
