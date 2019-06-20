@@ -584,6 +584,8 @@ module flann
     ! a higher search speedup at the cost of potentially not returning all the
     ! neighbours in the specified radius.
     ! 
+    ! Returns: count of points within search radius or a number <0 for error
+    !
     integer(c_int) function flann_radius_search(index_ptr,query,indices,dists,max_nn,radius,flann_params) &
                     bind(C,name="flann_radius_search")
         import c_int, c_ptr, c_float, FLANNParameters

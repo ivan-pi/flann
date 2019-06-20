@@ -18,7 +18,7 @@ program test_flann
     integer, allocatable :: result(:,:)
     real, allocatable :: dists(:,:)
 
-    real :: speedup
+    real :: speedup, t1, t2, t3
     type(c_ptr) :: index_id
     integer, pointer :: index_int => null()
     integer :: ires
@@ -33,24 +33,33 @@ program test_flann
 
     nn = 3
 
-    p%algorithm = FLANN_INDEX_KDTREE
-    p%trees = 8
+    p%algorithm = FLANN_INDEX_KDTREE_SINGLE
+    p%trees = 1
     p%log_level = FLANN_LOG_INFO
     p%checks = 128
+    p%random_seed = 12345678
 
     write(*,*) "Computing index."
 
+    call cpu_time(t1)
     index_id = flann_build_index_float(dataset,rows,cols,speedup,p)
+    call cpu_time(t2)
+    print *, "Building tree ", t2 - t1, " s"
+
     call c_f_pointer(index_id,index_int)
     print*, "pointer to integer = ", index_int
 
     allocate(result(nn,tcount))
     allocate(dists(nn,tcount))
 
+    call cpu_time(t2)
     ires = flann_find_nearest_neighbors_index(index_id,testset,tcount,result,dists,nn,p)
+    call cpu_time(t3)
+    print *, "Query time ", t3 - t2, " s"
+    
     print *, "Find neighbors ", ires
 
-    call print_points("results_f.dat",result)
+    call print_points("results_f.dat",result,dists)
 
 
     ! deallocate(index_int)
